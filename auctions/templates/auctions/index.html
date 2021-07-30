@@ -1,0 +1,54 @@
+{% extends "auctions/layout.html" %}
+
+
+{% block body %}
+
+    <div class="img-cover"></div>
+
+
+    <div>
+        <h4 class="center_text">{{ page_title }}</h4>
+    </div>
+
+    <div>
+        <div class="container-fluid">
+            <div class="row">
+                {% for listing in open_listings %}
+            
+                    <div id="listing_item" class="col-lg-3 col-sm-6 center_text">
+                        <a href="{% url 'listing_page' listing.id %}">
+                            <img src={{ listing.image_url }} alt={{ listing.title }} height="100px">
+
+                            <h5>{{ listing.title }}</h4></a>
+
+                            <h5>Auction: 
+                                {% if listing.open_status %}
+                                    <strong>Open</strong>
+                                {% else %}
+                                    <strong>Closed</strong>
+                                {% endif %}                     
+                            </h5>
+
+
+                            <p>
+                                Current Bid: $
+                                {% if listing.current_bid == None %}
+                                    {{ listing.min_bid }}
+                                {% else %}
+                                    {{ listing.current_bid }}
+                                {% endif %}
+                            </p>
+                            <p class="user">Owner: {{ listing.owner.first_name }} {{ listing.owner.last_name }}</p> 
+                        </a>
+                    </div>
+                {% empty %}
+                    <div>
+                        <h4>No listings.</h4>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+    
+{% endblock %}

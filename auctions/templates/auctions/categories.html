@@ -1,0 +1,27 @@
+{% extends "auctions/layout.html" %}
+
+
+{% block body %}
+
+    <div class="small-img-cover"></div>
+
+    <div>
+        <h4 class="center_text">{{ page_title }}</h4>
+        <br>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            {% for category in categories %}
+                <div class="col-lg-3 col-sm-6 center_text" style="margin-bottom: 15px;">
+                    <h5><a href="{% url 'index' %}?category={{category.0}}&name={{ category.1 }}">{{ category.1 }}</a></h5>
+                </div>
+            {% empty %}
+                <div>
+                    <h4>No categories.</h4>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+{% endblock %}

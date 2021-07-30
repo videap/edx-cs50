@@ -1,0 +1,104 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+
+    <div class="small-img-cover"></div>
+
+    <div class="lateral_padd">
+        <h2>{{ listing.title }}</h2>
+        {% if user_is_watching %}
+            <a href="{% url 'add_remove' listing.id %}"><p>Remove from Watchlist</p></a>
+        {% else  %}
+            <a href="{% url 'add_remove' listing.id %}"><p>Add to Watchlist</p></a>
+        {% endif %}
+    </div>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <div id="listing_item" class="col-sm-4 lateral_padd">
+                <div>
+                    <img class="img-box" src={{ listing.image_url }} alt={{ listing.title }} height="100px" alt="No image available">
+                </div> 
+            </div>
+            <div id="listing_item"class="col-sm-8">
+                {% if listing.open_status %}
+                    <h3>
+                        Auction:
+                        <strong>Open</strong>
+                    </h3>
+
+                {% elif user_is_winner %}
+                    <h2>Congratulations! You are the <strong>Winner!!</strong></h2>   
+                {% else %}
+                <h3>
+                    Auction:
+                    <strong>Closed</strong>
+                </h3> 
+                {% endif %}
+                <p>Owner: {{ listing.owner.first_name }} {{ listing.owner.last_name }}</p>
+                <br>
+                <h5>Description:</h5>
+                <p>{{ listing.description }}</p>
+                <br>
+
+                {% if listing.open_status and request.user.is_authenticated%}
+                                            
+                    <h5>Current Bid: <strong>$ {{ listing.current_bid }}</strong></h5>
+                    <br>
+                
+                    <form action="{% url 'listing_page' listing.id %}" method="POST">{% csrf_token %}
+                        <div class="form-group"> Bid Now! </div>
+                        <div class="form-group">
+                        <input class="form-control" type="number" required name="bid_value" min="{{ listing.current_bid }}" step=".01" placeholder="Place your bid here!">
+                        </div>         
+                        <input class="btn btn-primary" type="submit" value="Place Bid">
+                    </form>
+
+
+                    {% if user_is_owner %}
+                        <br>
+                        <a href="{% url 'close_listing' listing.id %}"><p style="color: red;">End this Bidding</p></a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        {% if request.user.is_authenticated %}
+            <div class="row">
+                <div class="col-sm-12">
+                    <form action="{% url 'comment_listing' listing.id %}" method="post" id="commentform">{% csrf_token %}
+                        <div class="form-group">
+                            <h5>Comment this auction:</h5>
+                        </div>
+                        <div class="form-group">
+                            <textarea class="form-control" name="content" form="commentform" placeholder="Enter text here..."></textarea>
+                        </div>
+                        <input class="btn btn-primary" type="Submit" value="Comment">
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-sm-12">
+                <h5>Comments:</h5>
+         
+                {% for comment in Comments %}
+                    <div id="comment">
+                        <div>
+                            <p>
+                                <strong>{{ comment.content }}</strong><br>
+                                <div class="user">Commented by: {{ comment.user.first_name }} {{ comment.user.last_name }}</div>
+                            </p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div>
+                        <p>Be the first to comment!</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+
+    <div class="small-img-cover"></div>
+
+    <h2>Create New Listing</h2>
+
+    <div>
+        <form id="new_listing" class= action="{% url 'create_listing' %}" method="POST">{% csrf_token %}
+
+            <div class="form-group">
+                <input class="form-control" autofocus type="text" name="title" placeholder="Auction Title (Ex. Picasso Painting)">
+            </div>
+            <div class="form-group">
+                <select class="form-control" name="category">
+                    <option value="" disabled selected>Choose a Category</option>
+                    <option value="ART">Arts</option>
+                    <option value="AUTO">Automotive</option>
+                    <option value="EL">Electronics</option>
+                    <option value="FSH">Fashion</option>
+                    <option value="HME">Home</option>
+                    <option value="IND">Industry</option>
+                    <option value="KID">Kids</option>
+                    <option value="PET">Pets</option>
+                    <option value="RE">Real Estate</option>
+                    <option value="SPT">Sports</option>
+                  </select> 
+            </div>
+            <div class="form-group">
+                <input class="form-control" type="number" name="min_bid" placeholder="Starting Bid (Ex: 1999.99)">
+            </div>
+            <div class="form-group">
+                <input class="form-control" type="url" name="image_url" placeholder="Image URL">
+            </div>
+
+            <div class="form-group">
+                <textarea class="form-control" name="description" form="new_listing" placeholder="Description (Ex. Original from 1937)"></textarea>
+            </div>
+
+            <input class="btn btn-primary" type="submit" value="Create Listing">
+
+        </form>
+    </div>
+    
+{% endblock %}

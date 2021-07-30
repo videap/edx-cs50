@@ -1,0 +1,46 @@
+textarea {
+    min-height: 300px;
+    margin-bottom: 20px;
+}
+
+body {
+    background-color: #e2e2ff;
+}
+
+.title {
+    color: dodgerblue;
+}
+
+#container_mail {
+    color: dodgerblue;
+    margin-top: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border-style: solid;
+    border-color: dodgerblue;
+    border-width: 1px;
+}
+
+#container_mail:hover {
+    color: palevioletred;
+    border-color: palevioletred;
+}
+
+#mail_list_title {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: large;
+}
+
+#mail_list_info {
+    font-style: italic;
+    font-size: small;
+}
+
+
+.email_content {
+    background-color: black;
+}
+
+.btn_mail {
+    margin-right: 5px;
+}

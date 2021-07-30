@@ -1,0 +1,394 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+
+    {% block user %}
+    {% endblock %}
+
+    <div class="body_content">
+        <div id="posts_app"></div>
+    </div>
+
+    
+    <div id="new_post_form">
+        <div class="container">
+            <br>
+            <div class="row justify-content-md-center">
+                <div class ="col-sm-8">
+                    <form action="/feed" method="POST">{% csrf_token %}
+                        <div class="form-group">                
+                            <textarea type="text" class="form-control" name="post_text" maxlength="255" placeholder="Enter text here..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-dark">POST</button>
+                            <button type="cancel" class="btn btn-light" id="close_form">CANCEL</button>
+                        </div>
+                    </form>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="body_content">
+        <script type="text/babel">
+
+            class Posts extends React.Component {
+
+                constructor(props){
+                    super(props);
+                    this.state = {
+                        actual_url: null,
+                        isLoading: false,
+                        err: null,
+                        post_ids: [],
+                        previous: null,
+                        next: null,
+                        page_string: null,
+                        page_num: 1,
+                    }
+                }
+
+
+                componentDidMount() {
+
+                    this.setState({actual_url: window.location.pathname});
+                    const params = new URLSearchParams(window.location.search);
+                    var page;
+                    if (params.has('page')) {
+                        page = params.get('page');
+                    } else {
+                        page=1;
+                    }
+                
+                    this.setState({isLoading: true});
+                    var url
+                    if (window.location.pathname==='/feed'){
+                        url="get_posts?page="+page;
+                    } else if (window.location.pathname==='/following') {
+                        url="get_posts?following=True&page="+page;
+                    } else {
+                        url=`get_posts?page_user={{pageuser}}&page=`+page;
+                    }
+
+                    fetch(url)
+                    .then(response => { 
+                        if (response.status===200) {
+                            return response.json();
+                        } else if (response.status===204) {
+                            throw new Error('User has no posts');
+                        } else {
+                            throw new Error('API Error: get_posts');
+                        }
+                    })
+                    .then(jsondata => {
+                        this.setState({post_ids: jsondata['post_ids'], isLoading: false})
+                        this.setState({page_string: jsondata['page'], page_num: jsondata['page_num']})
+
+                        if (jsondata['has_next']) {
+                            this.setState({next: jsondata['page_num']+1})
+                        }
+                        if (jsondata['has_previous']) {
+                            this.setState({previous: jsondata['page_num']-1})
+                        }
+                    })
+                    .catch(error => this.setState({err: error.message, isLoading: false}));
+                } 
+                    
+                render() {
+                    const ids = this.state.post_ids;
+
+                    if (this.state.err) {
+                        return (
+                            <div className="container single_post">
+                                <div className="row">
+                                    <div className="col-sm-12">
+                                        {this.state.err}.
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    } else if (this.state.isLoading) {
+                        return (
+                            <div className="container single_post">
+                                <div className="row">
+                                    <div className="col-sm-12">
+                                        Loading...
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    } else {
+                        return (
+                        <div>
+                            <div className="container">
+                                <div className="row justify-content-md-center">
+                                    <div className="col-md-2">
+                                        {this.state.previous 
+                                            ? <a href={this.state.actual_url+"?page="+this.state.previous}>Previous Page</a>
+                                            : <div></div>
+                                        }
+                                    </div>
+                                    <div className="col-md-2">
+                                        {this.state.page_string}
+                                    </div>
+                                    <div className="col-md-2">
+
+                                        {this.state.next 
+                                            ? <a href={this.state.actual_url+"?page="+this.state.next}>Next Page</a>
+                                            : <div></div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            {ids.map( id => (<Post key={id} post_id={id}/>))}
+                            
+                        </div>
+                        );
+                    }
+                }
+            }
+
+            class Post extends React.Component{
+                constructor(props){
+                    super(props);
+
+                    this.state = {
+                        post_id: null,
+                        isLoading: false,
+                        error: false,
+                        post_owner: null,
+                        post_owner_image: null,
+                        post_content: null,
+                        post_time: null,
+                        likes: null,
+                        post_liked: false,
+                    }
+                }
+
+
+                updatePostDatabase(update_post_content, post_id) {
+                    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    const data = {post_text: update_post_content, post_id: post_id};
+
+                    const POSTMethod = {
+                        method: 'POST',
+                        mode: 'same-origin',
+                        redirect: 'follow',
+                        headers: {'X-CSRFToken': csrftoken, 'Content-type': 'application/json; charset=UTF-8'},
+                        body: JSON.stringify(data), 
+                    }
+
+                    fetch("update_post", POSTMethod)
+                    .then(response => {
+
+                        if (!response.ok) {
+                            alert("Could not update post")
+                        }
+                    });
+                }
+
+                like_post() {
+
+                    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    const data = {post_id: this.state.post_id, is_liked: this.state.post_liked};
+
+
+                    const POSTMethod = {
+                        method: 'POST',
+                        mode: 'same-origin',
+                        redirect: 'follow',
+                        headers: {'X-CSRFToken': csrftoken, 'Content-type': 'application/json; charset=UTF-8'},
+                        body: JSON.stringify(data), 
+                    }
+
+                    fetch("like_dislike", POSTMethod)
+                    .then(response => {
+                        if (response.ok) {
+                            if (this.state.post_liked) {
+                                this.setState({post_liked: false, likes: (this.state.likes-1)});
+                            } else {
+                                this.setState({post_liked: true, likes: (this.state.likes+1)});
+                            }
+
+                        } else {
+                            throw new Error('API Error: like_dislike')
+                        }
+                    })
+                    .catch(error => alert(error.message));
+                }
+
+                componentDidMount() {
+                    this.setState({isLoading: true});
+                    fetch(`get_post_info?post_id=${this.props.post_id}`, )
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error('API Error: get_post_info')
+                        }
+                    })
+                    .then(jsondata => this.setState({
+                        post_id: jsondata["post_info"]["post_id"],
+                        post_owner: jsondata["post_info"]["post_owner__username"], 
+                        post_owner_image: jsondata["post_info"]["post_owner__image"], 
+                        post_content: jsondata["post_info"]["post_content"], 
+                        post_time: jsondata["post_info"]["post_creation__time"],
+                        post_date: jsondata["post_info"]["post_creation__date"],
+                        isLoading: false,
+                        likes: jsondata["post_info"]["post_likes"],
+                        post_liked: jsondata["post_info"]["post_liked"],
+                    }))
+                    .catch(error => this.setState({error:error.message, isLoading: false}));
+                    
+                }
+
+                render() {
+                    if (this.state.error){
+                        return(
+                            <div className="container single_post">
+                                <div className="row">
+                                    <div className="col-sm-1">
+                                        {this.state.error}.
+                                    </div>
+                                </div>
+                            </div>
+                        );
+
+                    } else if (this.state.isLoading) {
+                        return(
+                            <div className="container single_post">
+                                <div className="row">
+                                    <div className="col-sm-1">
+                                        Loading....
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    } else {
+                        // check if user is post owner to render EDIT button
+                        let edit_btn;
+                        if (this.state.post_owner == `{{user.username}}`){
+                            edit_btn = <EditPost post_text={this.state.post_content} post_id={this.state.post_id} updatePostDatabase={this.updatePostDatabase}/>;
+                        }
+
+                        let likebtn;
+                        if (this.state.post_liked) {
+                            likebtn = <button className="btn btn-dark w-100 border_yes" onClick={ () => this.like_post()}>Dislike</button>;
+                        } else {
+                            likebtn = <button className="btn btn-dark w-100 border_yes" onClick={ () => this.like_post()}>Like</button>;
+                        }
+
+                        return(
+                            <div className="container single_post">
+                                <div className="row">
+                                    <div className="col-2 post_box_image">
+                                        <a href={this.state.post_owner}>
+                                            <img src={"media/" + this.state.post_owner_image} className="post_image"/>
+                                        </a>
+                                    </div>
+                                    <div className="col-10">
+                                        <div className="row">
+                                            <div className="pl-0">
+                                                <strong><a href={this.state.post_owner}>@{this.state.post_owner}</a></strong> 
+                                            </div>
+                                        </div>
+                                        <div className="row">
+                                            <div className="pl-0">
+                                                said on {this.state.post_date} at {this.state.post_time}:
+                                            </div>
+                                        </div>
+                                        <div className="row">
+                                            <div className="pr-5 w-100">
+                                                <textarea disabled className="form-control post_textarea" id={this.state.post_id} defaultValue={this.state.post_content}></textarea>
+                                            </div>
+                                        </div>
+                                        <div className="row mt-2">
+                                            <div className="col-2 px-0 mr-2">
+                                                {likebtn}
+                                            </div>
+
+                                            <div className="h-100 mr-2 my-auto">
+                                                ♥ {this.state.likes} 
+                                            </div>
+
+                                            <div>
+                                                {edit_btn}
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    }
+                }
+            }
+
+            class EditPost extends React.Component{
+                constructor(props){
+                    super(props);
+
+                    this.state = {
+                        editing: false
+                    }
+                }
+
+
+                change_post(e, post_id) {
+                    document.getElementById(post_id).disabled = false;
+                    this.setState({editing: true});
+                }
+
+                cancel_change_post(e, post_id) {
+                    document.getElementById(post_id).disabled = true;
+                    this.setState({editing: false});                    
+                }
+
+                save_change_post(e, post_id){
+                    document.getElementById(post_id).disabled = true;
+                    this.props.updatePostDatabase(document.getElementById(post_id).value, post_id);
+                    this.setState({editing: false});                    
+
+                }
+
+                render() {
+                    let savebtn = <button className="btn btn-dark mr-1 border_yes" onClick={(e) => this.save_change_post(e, this.props.post_id)}>Save</button>;
+                    let cancelbtn = <button className="btn btn-dark mr-1 border_yes" onClick={(e) => this.cancel_change_post(e, this.props.post_id)}>Cancel</button>;
+                    let editbtn = <button className="btn btn-dark mr-1 border_yes" onClick={(e) => this.change_post(e, this.props.post_id)}>Edit</button>;
+
+                    if (this.state.editing) {
+                        return(
+                            <div>
+                                <div>
+                                    {savebtn}
+                                    {cancelbtn}
+                                </div>                        
+                            </div>
+                        );
+                    } else {
+                        return(
+                            <span>
+                                {editbtn}                            
+                            </span>
+                        );
+                    }
+
+                }
+                
+
+            }
+
+            ReactDOM.render(<Posts/>, document.querySelector("#posts_app"));
+        </script>
+    </div>
+
+{% endblock %}
+
+
+{% block script %}
+    <script src="static/network/index.js"></script>
+{% endblock %}

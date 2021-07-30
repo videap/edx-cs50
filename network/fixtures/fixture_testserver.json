@@ -1,0 +1,13 @@
+[
+    {
+        "model": "network.User",
+        "pk": 1,
+        "fields": {
+            "username": "user0",
+            "first_name": "name0",
+            "last_name": "last0",
+            "email": "user0@example.com",
+            "password":"pbkdf2_sha256$180000$Xv7QDMfHiMl1$06is6iUhEmVbJoTGwnJertRosZTUI2cdPa8W59TOQ2E="
+        }
+    }
+]

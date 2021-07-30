@@ -1,6 +1,7 @@
 # Project 0
 
-## Meet Vitor Pinto website
+## Meet Vitor Pinto 1st website
+This is the files you will find for the Project0 submission. Moved to a public repo so it is possible for other in the community learn as well.
 
 ### Website Structure
 

@@ -1,6 +1,6 @@
 # Capstone
 
-This application called **Plato** is an old idea that got me to start developing. This is the first version, with lots of enhancements yet to be made. It is a work-in-progress that will be released soon.
+This application called **Plato** is an old idea that got me to start developing. This is the first version, with lots of enhancements yet to be made. It is a work-in-progress for study and full stack development.
 
 The main idea is to connect people who need ideas with people who are creative. So, the users can buy and sell ideas very fast. The name is a "tribute" to the **World of Ideas Theory**, by Plato.
 
